@@ -1,0 +1,10 @@
+numpy
+scipy
+networkx
+matplotlib
+scikit-learn
+python-louvain
+python-igraph
+leidenalg
+torch
+torch_geometric
