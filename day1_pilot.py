@@ -34,7 +34,7 @@ SEED = 0
 K = 4
 
 
-# ---------------- method wrappers (reused all sprint) ----------------
+# ------------- method wrappers (reused by all later scripts) -------------
 
 def louvain_labels(A, seed=SEED):
     G = nx.from_scipy_sparse_array(A)

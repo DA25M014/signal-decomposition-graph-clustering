@@ -15,8 +15,8 @@ difference between them is the pooling objective, not the encoder.
 Run:
     python3 day4_runner.py --quick        # ~2-3 min smoke test
                                           # (writes results_quick.csv)
-    caffeinate -i python3 day4_runner.py  # the real overnight sweep
-                                          # (keep lid open, power in)
+    caffeinate -i python3 day4_runner.py  # the full sweep
+                                          # (caffeinate: macOS, optional)
 """
 
 import argparse

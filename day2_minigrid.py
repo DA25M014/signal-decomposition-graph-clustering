@@ -1,5 +1,5 @@
 """
-Day 2: the 3x3 mini-grid - first rough draft of the money figure.
+Day 2: the 3x3 mini-grid - first rough draft of the winner map.
 
 Crosses the two knobs:
     structure in {0.9, 0.4, 0.05}   (strong / critical / none)

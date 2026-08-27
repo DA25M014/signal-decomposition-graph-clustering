@@ -58,7 +58,7 @@ def generate(n=1000, k=4, avg_deg=16, structure=1.0, feature=1.0,
 
 
 def to_edge_index(A):
-    """CSR adjacency -> (2, E) int64 array for PyTorch Geometric (Sunday)."""
+    """CSR adjacency -> (2, E) int64 array for PyTorch Geometric."""
     coo = sparse.coo_matrix(sparse.triu(A, k=1))
     e = np.vstack([coo.row, coo.col])
     return np.hstack([e, e[::-1]]).astype(np.int64)

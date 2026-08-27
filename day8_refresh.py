@@ -1,5 +1,5 @@
 """
-Day 8: the refresh - final compute before the results freeze.
+Day 8: the refresh - the last compute pass behind the released CSVs.
 
 Part 1: runs dmon_ref (the reference-faithful DMoN from day7) over the
         full 8x8 x 5-seed sweep grid and appends rows with

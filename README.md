@@ -11,6 +11,9 @@ CPU for the synthetic sweep).
 
 ## Contents
 
+Scripts are named `dayN_*` in build order; each later script imports
+helpers from earlier ones.
+
 | File | What it is |
 |---|---|
 | `generator.py` | Attributed planted-partition SBM with independent structure and feature knobs (the paper's instrument) |
@@ -23,9 +26,22 @@ CPU for the synthetic sweep).
 | `day7_fairness.py` | Reference-faithful DMoN (official objective, dropout, epochs); fairness comparison; writes `fairness.csv` |
 | `day8_refresh.py` | Reference DMoN across the full sweep + reference-config real-data ablations |
 | `paper_figures.py` | Publication figures (Fig. 1 and Fig. 2) |
-| `results.csv` | 1,920 synthetic runs (8x8 grid, 5 seeds, 6 method columns) |
+| `results.csv` | 1,920 synthetic runs (8x8 grid, 5 seeds, 6 methods) |
 | `realdata.csv` | 81 real-data runs (3 datasets, 3 seeds, methods + ablations) |
 | `fairness.csv` | 27 reference-config validation runs |
+
+## Author-response artifacts (added during the review discussion)
+
+| File | What it is |
+|---|---|
+| `REBUTTAL.md` | Full point-by-point author responses to the reviews |
+| `rebuttal_lib.py` | Multi-layer reference DMoN (depth=1 reproduces `dmon_ref` exactly; checked by `rebuttal_pilot.py`) |
+| `rebuttal_pilot.py` | Fidelity check and per-config timings |
+| `rebuttal_runner.py` | Depth 2/3 sweeps (DMoN and MinCut), hyperparameter grid, real-data depth; writes `rebuttal57.csv` |
+| `rebuttal_newdata.py` | Amazon Computers + Coauthor CS, full Table-1 battery; writes `rebuttal_newdata.csv` |
+| `rebuttal_analysis.py` | Recomputes the headline numbers quoted in `REBUTTAL.md` from the CSVs |
+| `rebuttal57.csv` | 3,538 rebuttal runs (depth, tuning, real-data depth) |
+| `rebuttal_newdata.csv` | 42 rebuttal runs (two additional datasets) |
 
 ## Setup
 
@@ -60,7 +76,11 @@ Every runner is resumable: rerun the same command and completed
 - The reference DMoN configuration follows the official implementation
   (loss = spectral + collapse with no orthogonality term, dropout 0.5,
   shared-kernel skip, 1,000 epochs, Adam 1e-3) and reproduces the
-  published Cora score within seed noise.
+  published Cora score within seed noise (per-seed NMI 0.489, 0.445,
+  0.444 vs published 0.488; mean 0.459).
+- In `realdata.csv`, methods prefixed `dmonref_` are the channel
+  ablations run at the reference configuration (`dmon_ref`); the
+  `dmon_`-prefixed ablations use the fixed-budget configuration.
 - Real-data labels follow the standard convention of using class
   labels as community proxies.
 - Datasets download automatically via PyTorch Geometric on first run.

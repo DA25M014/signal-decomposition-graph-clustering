@@ -1,8 +1,9 @@
 """
 Day 3: DMoN enters the arena.
 
-Runs DMoN (1-layer GCN encoder + DMoNPooling head, faithful to the
-reference architecture) on the same 3x3 grid as Day 2, 3 seeds per cell,
+Runs DMoN (1-layer GCN encoder + DMoNPooling head, fixed-budget
+configuration; day7_fairness.py has the reference-faithful variant)
+on the same 3x3 grid as Day 2, 3 seeds per cell,
 and compares every cell against the best cheap method from the Day 2
 winner map (Louvain / Leiden / k-means, recomputed here so the script
 is self-contained).
@@ -46,7 +47,8 @@ CHEAP = {
 
 
 class DMoNNet(torch.nn.Module):
-    """1-layer GCN with a linear skip connection, as in the DMoN paper.
+    """1-layer GCN with a linear skip connection (fixed-budget variant;
+    day7_fairness.py implements the official shared-kernel skip).
 
     The skip path (a plain Linear on the raw features) is what lets the
     model keep using feature signal even when the graph is pure noise -

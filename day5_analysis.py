@@ -1,5 +1,5 @@
 """
-Day 5: from results.csv to the money figures.
+Day 5: from results.csv to the analysis figures.
 
 Reads the sweep CSV (any grid size, tolerates partial/incomplete runs)
 and produces:

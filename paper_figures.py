@@ -1,5 +1,5 @@
 """
-Paper-ready figures for the LoG 4-pager (and later the CODS 8-pager).
+Paper-ready figures (Fig. 1 and Fig. 2).
 
 Reads results.csv (requires the dmon_ref column from day8) and writes:
 
