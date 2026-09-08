@@ -4,10 +4,12 @@ Anonymous code and data release accompanying the LoG 2026 extended
 abstract submission "When Does the Graph Actually Help? Decomposing
 Feature and Structure Signal in Deep Graph Clustering."
 
-All 2,028 experiment runs reported in the paper are included as CSVs,
-so every number and figure can be regenerated without re-running
-anything. Full re-runs are also supported (about one hour on a laptop
-CPU for the synthetic sweep).
+Every experiment run behind the paper and the review-phase responses is
+included as a CSV, so every number and figure can be regenerated without
+re-running anything: 6,328 runs across six files, the 5,608 cited in the
+revised paper plus the 720 added during the discussion phase. Full
+re-runs are also supported (about one hour on a laptop CPU for the
+synthetic sweep).
 
 ## Contents
 
@@ -43,6 +45,14 @@ helpers from earlier ones.
 | `rebuttal57.csv` | 3,538 rebuttal runs (depth, tuning, real-data depth) |
 | `rebuttal_newdata.csv` | 42 rebuttal runs (two additional datasets) |
 
+## Discussion-phase artifacts (added during the review discussion)
+
+| File | What it is |
+|---|---|
+| `discussion57_runner.py` | Two follow-up arms: the structureless row at exactly structure = 0 (full feature grid, 5 seeds, 6 methods) and a 20-seed rerun of four decision-critical cells with the realized center separation logged; resumable; writes `discussion57.csv` |
+| `discussion57_analysis.py` | Prints every number quoted in the discussion-phase section of `REBUTTAL.md`, including the reproducibility join against `results.csv` |
+| `discussion57.csv` | 720 discussion-phase runs (240 in arm A, 480 in arm B) |
+
 ## Setup
 
 ```
@@ -66,6 +76,14 @@ python day8_refresh.py           # reference-config DMoN column + real ablations
 python day6_realdata.py          # real-data table (downloads datasets)
 python day7_fairness.py          # reference-config validation
 python paper_figures.py
+```
+
+Follow-up experiments added during the review:
+
+```
+python rebuttal_runner.py        # depth, tuning, real-data depth
+python rebuttal_newdata.py       # Amazon Computers + Coauthor CS
+python discussion57_runner.py    # structure = 0 row + 20-seed cells (~15 min)
 ```
 
 Every runner is resumable: rerun the same command and completed

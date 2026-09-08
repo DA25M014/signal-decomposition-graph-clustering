@@ -7,7 +7,9 @@ CSVs (`results.csv`, `realdata.csv`, `fairness.csv`) or from two new
 experiment CSVs added to this repository (`rebuttal57.csv`, 3,538 runs,
 and `rebuttal_newdata.csv`, 42 runs; 3,580 new runs in total, produced by
 `rebuttal_runner.py` and `rebuttal_newdata.py` and summarized by
-`rebuttal_analysis.py`). Math is
+`rebuttal_analysis.py`), or from the discussion-phase CSV
+(`discussion57.csv`, 720 runs, produced by `discussion57_runner.py` and
+summarized by `discussion57_analysis.py`). Math is
 written in plain text because this viewer does not render TeX.
 
 While preparing this rebuttal we re-verified every numeric claim in the
@@ -384,3 +386,132 @@ with this repository's scripts and CSVs as the complete record.
 
 We again welcome follow-up questions from all reviewers during the
 discussion phase.
+
+---
+
+## Discussion phase: Reviewer jYQg follow-up
+
+Reviewer jYQg asked five questions about the sampling protocol and the
+reproducibility of the experiments, and raised a concern about the presentation
+and our disclosed use of generative AI. The answers below are backed by 720 new
+runs in `discussion57.csv`, produced by `discussion57_runner.py`: arm A is the
+structureless row at exactly structure = 0 (full feature grid, 5 seeds, all six
+methods, 240 runs) and arm B is a 20-seed rerun of four decision-critical cells
+with the realized center separation logged (480 runs).
+`discussion57_analysis.py` prints every number quoted below.
+
+**On presentation and the use of generative AI.** The submission carries a
+GenAI Usage Statement, and the point behind the criticism is taken: the paper
+enumerates cells where it should synthesize. The central claim is one sentence.
+The graph channel of a GNN pooling method is a weak source of community
+information but a strong amplifier of the feature channel, so a GNN helps only
+where both channels are individually weak and complementary, and an
+uninformative graph is actively harmful. The camera-ready will lead each
+section with that claim, demote the per-cell enumeration to the figures and the
+released CSVs, and state the sampling protocol in the paper itself. All
+experiments were run by the author, and every number in the paper and in these
+responses is recomputed from the shipped CSVs by the shipped scripts.
+
+**Q1. Is anything resampled per seed, or does the seed only change model
+initialization.** The seed controls everything. In `generator.generate` a
+single numpy Generator seeded by `seed` draws the SBM graph, the k community
+centers, and the per-node Gaussian noise, so each seed is a fresh graph, a
+fresh center configuration and fresh features. The same integer is passed to
+each method as its own seed, so model initialization changes with it too.
+
+**Q2. Are datasets shared across methods, and are center configurations reused
+across the grid.** Within a cell, yes. `day4_runner.py` generates (A, X, y)
+once per (structure, feature, seed) and hands the identical arrays to the five
+methods it runs; `day8_refresh.py` adds the `dmon_ref` column and regenerates
+the arrays with the same `generate(n=1000, k=4, structure, feature, seed)` call,
+which is deterministic, so all six columns are paired on bit-identical inputs.
+Across the grid the center configuration is reused by construction, which the
+submission did not state. Sampling the graph consumes a single integer from the
+stream, so for a given seed the centers are the same unit-normal draw scaled by
+the feature knob and the noise matrix is identical; features are therefore
+identical along the structure axis and comparisons across cells are paired
+within a seed. The graph is redrawn at every (structure, seed).
+
+**Q3. Sensitivity to realized center separation, and are five seeds enough.**
+Realized separation drives the feature-reading methods and not the graph-only
+ones. At (structure, feature) = (0.45, 0.5) the minimum pairwise center distance
+ranges over [2.79, 3.83] across 20 seeds, and its correlation with NMI is
+r = +0.83 for k-means, +0.77 for DMoN(ref), +0.66 for MinCut, against -0.18 for
+Louvain and +0.21 for Leiden. The conclusions are stable under 20 seeds. The
+delta columns use the convention of Figure 2a (mean over seeds per method, then
+the maximum within each family, GNN family {DMoN(ref), MinCut}), so they are
+directly comparable to the printed map; the range and sign-flip columns use the
+per-seed version of the same statistic, which is the quantity that says how
+often a single draw would flip the verdict.
+
+| cell (s,f) | delta, 5 seeds | delta, 20 seeds | per-seed delta, 20-seed range | sign flips |
+|---|---|---|---|---|
+| 0.35, 0.20 | +0.221 | +0.252 | [-0.069, +0.421] | 1 of 20 |
+| 0.45, 0.50 | +0.104 | +0.108 | [+0.065, +0.203] | 0 of 20 |
+| 0.65, 0.00 | -0.935 | -0.919 | [-0.963, -0.850] | 0 of 20 |
+| 0.95, 0.00 | -0.658 | -0.617 | [-0.825, -0.378] | 0 of 20 |
+
+Five seeds recover the sign at every cell and the magnitude to within 0.04 at
+three of the four; the exception is (0.95, 0.00), where the 5-seed estimate is
+0.042 more negative than the 20-seed one. Cell-level margins near the win-band
+edge are the seed-sensitive quantity: at (0.35, 0.20) the per-seed delta ranges
+from -0.069 to +0.421 with a standard deviation of 0.115, so one draw in twenty
+puts a non-GNN method ahead in a cell the map colors as a GNN win. The
+camera-ready will report this variability rather than restate individual cell
+margins as precise. Including the fixed-budget DMoN in the GNN family changes
+none of the four delta values at three decimals.
+
+**Q4. Where the protocol is documented.** Graph sampling: `generator.py`,
+planted-partition SBM via `networkx.stochastic_block_model`, n = 1000, k = 4
+equal blocks, average degree 16, cross-community edge fraction
+mu = (1 - s)(1 - 1/k), so p_in = (1 - mu) * 16 / (n/k - 1) and
+p_out = mu * 16 / (n - n/k). Features: k centers drawn from N(0, f^2 I_32) plus
+N(0, I_32) noise, dimension 32. Grid, seeds and method loop: `day4_runner.py`
+(STRUCTURES, FEATURES, SEEDS = [0, 1, 2, 3, 4]). Reference DMoN column:
+`day8_refresh.py` with `day7_fairness.py`. Real-data preprocessing:
+`day6_realdata.py`, PyTorch Geometric Planetoid and Amazon loaders with
+NormalizeFeatures, symmetrized, unweighted, self-loops removed; the ablations
+are `rewire` (a G(n, m) graph with the same node and edge counts) and
+`noise_like` (iid N(0,1) features). Every run, including its seed, is a row in
+`results.csv`, `realdata.csv`, `fairness.csv`, `rebuttal57.csv`,
+`rebuttal_newdata.csv` or `discussion57.csv`. The camera-ready will carry this
+paragraph in the paper rather than only in this repository.
+
+One reproducibility caveat we can quantify: arm B recomputed the 120 runs
+(4 cells x 5 seeds x 6 methods) that overlap the submitted sweep, and 115
+reproduce the released NMI exactly. The five that differ are four MinCut runs
+and one DMoN(ref) run, the largest gap being 0.0057 NMI, which is
+nondeterminism in the torch backend rather than in the protocol. Louvain,
+Leiden, k-means and the fixed-budget DMoN reproduced bit-identically.
+
+**Q5. Does the structureless-graph result hold at structure = 0.** Yes, and more
+strongly. The grid starts at 0.05 because that was the smallest nonzero setting
+of the knob; structure = 0 is the planted partition with mu = 1 - 1/k, that is,
+an essentially uniform random graph. Arm A ran the full feature grid there with
+5 seeds and all six methods. Louvain and Leiden score 0.008 and 0.006 mean NMI,
+confirming there is nothing in the wiring to find. The deficit column is again
+the Figure 2a statistic; MinCut is at the noise floor in this row, so it equals
+DMoN(ref) minus the best non-GNN method.
+
+| feature | best non-GNN (method) | DMoN(ref) | deficit at s=0 | deficit at s=0.05 |
+|---|---|---|---|---|
+| 0.00 | 0.008 (louvain) | 0.004 | -0.004 | -0.008 |
+| 0.20 | 0.091 (k-means) | 0.012 | -0.079 | -0.065 |
+| 0.35 | 0.479 (k-means) | 0.040 | -0.439 | -0.368 |
+| 0.50 | 0.758 (k-means) | 0.074 | -0.684 | -0.594 |
+| 0.65 | 0.925 (k-means) | 0.106 | -0.819 | -0.706 |
+| 0.80 | 0.978 (k-means) | 0.133 | -0.845 | -0.709 |
+| 1.00 | 0.998 (k-means) | 0.199 | -0.800 | -0.667 |
+| 1.50 | 1.000 (k-means) | 0.328 | -0.672 | -0.483 |
+
+The s = 0.05 column reproduces the bottom row of Figure 2a in the revised PDF.
+So the harm claim is not an artifact of the 0.05 setting: the worst deficit
+grows from -0.71 at s = 0.05 to -0.85 at s = 0, and DMoN(ref) averages at most
+0.33 there (best single run 0.36) while k-means reaches 1.00. MinCut never
+exceeds 0.0051 NMI anywhere in the s = 0 row. The fixed-budget DMoN
+configuration is harmed less but is not spared: its deficit against the best
+non-GNN method is -0.33 at f = 0.35, -0.35 at f = 0.50 and -0.24 at f = 0.65,
+and it recovers only once features are strong (-0.02 at f = 1.0 and 0.00 at
+f = 1.5). The reference configuration's heavier weighting of the structure
+channel deepens the harm and extends it to the strong-feature end of the row;
+it is not the sole source of it.
