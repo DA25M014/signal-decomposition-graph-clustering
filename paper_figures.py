@@ -27,6 +27,8 @@ from collections import defaultdict
 import numpy as np
 import matplotlib
 matplotlib.use("Agg")
+matplotlib.rcParams["pdf.fonttype"] = 42   # TrueType, not Type 3
+matplotlib.rcParams["ps.fonttype"] = 42
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
 from matplotlib.patches import Patch
